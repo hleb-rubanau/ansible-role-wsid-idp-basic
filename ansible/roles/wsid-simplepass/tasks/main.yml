@@ -1,3 +1,44 @@
----
-set_fact:
+---`
+- apt:
+    name: 
+      - python3
+      - python3-nacl
+      - pwgen
+      - openssl
+- set_fact:
     wsid_hooks_dir: "{{ wsid_etc }}/hooks"
+    wsid_scripts_dir: "{{ wsid_etc }}/scripts"
+- name: system directories
+  file:
+    dest: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ wsid_hooks_dir }}"
+    - "{{ wsid_scripts_dir }}"
+- set_fact:
+    wsid_script_setup: "{{ wsid_scripts_dir }}/setup.sh"
+    wsid_script_teardown: "{{ wsid_scripts_dir }}/teardown.sh"
+    wsid_script_rotate: "{{ wsid_scripts_dir }}/rotate.sh"
+- name: systemd scripts
+  template:
+    dest: "{{ wsid_system_dir }}/{{ item }}"
+    src: "{{ item }}"
+    mode: 0644
+  loop:
+    - [ "setup.sh", "teardown.sh", "rotate.sh" ]     
+- name: systemd service unit
+  template:
+    dest: /etc/systemd/system/wsid.service
+    src: wsid.service
+  registed: wsid_systemd_conf
+- name:
+  service:
+    name: wsid
+    daemon_reload: "{{ wsid_systemd_conf.changed }}"
+    enabled: yes
+    state: "{{ 'restarted' if wsid_systemd_conf.changed else 'started' }}"
+- cron:
+    name: "Rotate WSID"
+    command: "{{ wsid_script_rotate }}"
+    minute: "*/{{ wsid_rotation_minutes }}"
+
