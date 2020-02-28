@@ -1,0 +1,12 @@
+[Unit]
+Description=Setup WSID symlinks before network starts
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart={{ wsid_script_setup }}
+TimeoutStartSec=0
+ExecStop={{ wsid_script_teardown }}
+
+[Install]
+WantedBy=network.target

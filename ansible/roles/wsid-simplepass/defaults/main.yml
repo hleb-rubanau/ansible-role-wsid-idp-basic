@@ -1,0 +1,4 @@
+---
+wsid_var_run: /var/run/wsid
+wsid_etc: /usr/local/etc/wsid
+wsid_user: wsid

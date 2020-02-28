@@ -1,0 +1,3 @@
+---
+set_fact:
+    wsid_hooks_dir: "{{ wsid_etc }}/hooks"
