@@ -41,4 +41,7 @@
     name: "Rotate WSID"
     command: "{{ wsid_script_rotate }}"
     minute: "*/{{ wsid_rotation_minutes }}"
-
+- name: nginx include snippet
+  template:
+    dest: "{{ wsid_includes_dir }}/nginx-expose.conf"
+    src: nginx-expose.conf
