@@ -6,14 +6,16 @@
       - pwgen
       - openssl
 - set_fact:
-    wsid_hooks_dir: "{{ wsid_etc }}/hooks"
+    wsid_hooks_passwd_dir: "{{ wsid_etc }}/hooks/onpasswdchange"
+    wsid_hooks_key_dir: "{{ wsid_etc }}/hooks/onkeychange"
     wsid_scripts_dir: "{{ wsid_etc }}/scripts"
 - name: system directories
   file:
     dest: "{{ item }}"
     state: directory
   loop:
-    - "{{ wsid_hooks_dir }}"
+    - "{{ wsid_hooks_passwd_dir }}"
+    - "{{ wsid_hooks_key_dir }}"
     - "{{ wsid_scripts_dir }}"
 - set_fact:
     wsid_script_setup: "{{ wsid_scripts_dir }}/setup.sh"
@@ -24,8 +26,7 @@
     dest: "{{ wsid_system_dir }}/{{ item }}"
     src: "{{ item }}"
     mode: 0644
-  loop:
-    - [ "setup.sh", "teardown.sh", "rotate.sh" ]     
+  loop: [ "setup.sh", "teardown.sh", "rotate.sh" ]     
 - name: systemd service unit
   template:
     dest: /etc/systemd/system/wsid.service
@@ -37,10 +38,14 @@
     daemon_reload: "{{ wsid_systemd_conf.changed }}"
     enabled: yes
     state: "{{ 'restarted' if wsid_systemd_conf.changed else 'started' }}"
-- cron:
-    name: "Rotate WSID"
-    command: "{{ wsid_script_rotate }}"
-    minute: "*/{{ wsid_rotation_minutes }}"
+- include: identity.yml
+  loop: "{{ wsid_identities }}"
+  loop_control:
+    loop_var: wsid_identity
+- include: disabled_identity.yml
+  loop: "{{ wsid_disabled_identities }}"
+  loop_control:
+    loop_var: wsid_identity
 - name: nginx include snippet
   template:
     dest: "{{ wsid_includes_dir }}/nginx-expose.conf"

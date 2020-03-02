@@ -21,4 +21,8 @@ function generate_password() {
 }
 
 prepare_directories 2>&1 | logger -e -s -t wsid
-exec "{{wsid_script_rotate}} _"
+
+{% for wsid_identity in wsid_identities %}
+echo "Running rotation script for {{wsid_identity}}" 2>&1 | logger -e -s -t wsid
+{{ wsid_script_rotate }} "{{ wsid_identity }}"
+{% endfor %}

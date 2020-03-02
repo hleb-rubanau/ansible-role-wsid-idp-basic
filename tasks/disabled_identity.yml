@@ -1,0 +1,12 @@
+---
+- name: password hooks directory
+  file:
+    dest: "{{ wsid_hooks_passwd_dir }}/{{ wsid_identity }}"
+    state: absent
+- name: key hooks directory
+  file:
+    dest: "{{ wsid_hooks_key_dir }}/{{ wsid_identity }}"
+    state: absent
+- cron:
+    name: "Rotate WSID for {{wsid_identity}}"
+    state: absent

@@ -4,3 +4,5 @@ wsid_includes_dir: /usr/share/wsid
 wsid_etc: /usr/local/etc/wsid
 wsid_user: wsid
 wsid_rotation_minutes: 10
+wsid_identities: [ '_' ]
+wsid_disabled_identities: []

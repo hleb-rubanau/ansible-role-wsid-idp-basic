@@ -6,10 +6,10 @@ USER_PUBLIC_DIR="{{ wsid_var_run }}/public/$ID"
 
 PASSWDFILE="${USER_PRIVATE_DIR}/passwd"
 PASSWDHASHFILE="${ USER_PUBLIC_DIR }/passwdhash"
-PASSWD_HOOKS_DIR="{{ wsid_hooks_passwd_dir }}"
+PASSWD_HOOKS_DIR="{{ wsid_hooks_passwd_dir }}/$ID"
 KEYFILE="${USER_PRIVATE_DIR}/id_ed25519"
 PUBLIC_KEY_FILE="${USER_PUBLIC_DIR}/id_ed25519.pub"
-KEY_HOOKS_DIR="{{ wsid_hooks_key_dir }}"
+KEY_HOOKS_DIR="{{ wsid_hooks_key_dir }}/$ID"
 
 function prepare_directories() {
     mkdir -pv "$USER_PRIVATE_DIR"
@@ -40,12 +40,16 @@ function generate_key_file() {
 
 function run_hooks() {
     hooksdir="$1"
-    echo "Checking for hooks in $hooksdir"
-    cd "$hooksdir"
-    for hook in $( find . -type -f ); do
-        echo "Running hook $hook"
-        $hook
-    done
+    if ![ -e "$hooksdir" ]; then
+        echo "Hooks directory $hooksdir does not exist, running no hooks"
+    else
+        echo "Checking for hooks in $hooksdir"
+        cd "$hooksdir"
+        for hook in $( find . -type -f ); do
+            echo "Running hook $hook"
+            $hook
+        done
+    fi
 }
 
 prepare_directories 2>&1 | with_logger 
