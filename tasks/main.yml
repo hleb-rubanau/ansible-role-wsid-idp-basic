@@ -21,12 +21,13 @@
     wsid_script_setup: "{{ wsid_scripts_dir }}/setup.sh"
     wsid_script_teardown: "{{ wsid_scripts_dir }}/teardown.sh"
     wsid_script_rotate: "{{ wsid_scripts_dir }}/rotate.sh"
+    wsid_script_expose_hostkey: "{{ wsid_scripts_dir }}/expose_hostkey.sh"
 - name: systemd scripts
   template:
     dest: "{{ wsid_system_dir }}/{{ item }}"
     src: "{{ item }}"
     mode: 0644
-  loop: [ "setup.sh", "teardown.sh", "rotate.sh" ]     
+  loop: [ "setup.sh", "teardown.sh", "rotate.sh", "expose_hostkey.sh" ]     
 - name: systemd service unit
   template:
     dest: /etc/systemd/system/wsid.service
@@ -46,6 +47,10 @@
   loop: "{{ wsid_disabled_identities }}"
   loop_control:
     loop_var: wsid_identity
+- cron:
+    name: "WSID expose host key"
+    command: "{{ wsid_script_expose_hostkey }}"
+    minute: "*/{{ wsid_rotation_minutes }}"
 - name: nginx include snippet
   template:
     dest: "{{ wsid_includes_dir }}/nginx-expose.conf"

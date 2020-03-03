@@ -10,8 +10,8 @@ function prepare_directories() {
 
     ln -sfv "$wsid_temp_dir" "$wsid_var_run" 
 
-    wsid_private_dir="${wsid_var_run}/private/_"
-    wsid_public_dir="${wsid_var_run}/public/_"
+    wsid_private_dir="${wsid_var_run}/private"
+    wsid_public_dir="${wsid_var_run}/public"
 
     mkdir -pv "$wsid_private_dir" "$wsid_public_dir"
 }
