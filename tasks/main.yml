@@ -5,6 +5,7 @@
       - python3-nacl
       - pwgen
       - openssl
+      - apache2-utils
 - set_fact:
     wsid_hooks_passwd_dir: "{{ wsid_etc }}/hooks/onpasswdchange"
     wsid_hooks_key_dir: "{{ wsid_etc }}/hooks/onkeychange"
