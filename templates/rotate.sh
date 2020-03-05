@@ -4,9 +4,12 @@ ID="${1:-_}"
 USER_PRIVATE_DIR="{{ wsid_var_run }}/private/$ID"
 USER_PUBLIC_DIR="{{ wsid_var_run }}/public/$ID"
 
+ROTATION_TIMESTAMP=$( date +%s )
+
 PASSWDFILE="${USER_PRIVATE_DIR}/passwd"
 PASSWDHASHFILE="${ USER_PUBLIC_DIR }/passwdhash"
 PASSWD_HOOKS_DIR="{{ wsid_hooks_passwd_dir }}/$ID"
+
 KEYFILE="${USER_PRIVATE_DIR}/id_ed25519"
 PUBLIC_KEY_FILE="${USER_PUBLIC_DIR}/id_ed25519.pub"
 KEY_HOOKS_DIR="{{ wsid_hooks_key_dir }}/$ID"
@@ -19,23 +22,28 @@ function prepare_directories() {
 function with_logger() {
     logger -e -s -t wsid
 }   
+
 function move_old_file() {
     oldfile="$1"
-    if [ -e "$oldfile" ]; then
-        mv -vf "$oldfile" "${oldfile}.old"
+    if [ -e "$oldfile.new" ]; then
+        mv -vf "$oldfile.new" "${oldfile}.old"
     else
-        echo "No preexisting file '$oldfile' found"
+        echo -n '' > "${ oldfile }.old"
     fi
 }
 
 function generate_passwdfile() {
-    pwgen | tee "$PASSWDFILE" | python -c 'import nacl.pwhash; import sys; print( nacl.pwhash.str(line.strip())+"\n" for line in sys.stdin.readlines(); ' > "$PASSWDHASHFILE"
-    echo "New password stored at $PASSWDFILE, hash in $PASSWDHASHFILE"
+    local secret_file=$1
+    local public_file="$2.new"
+    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( nacl.pwhash.str(line.strip())+"\n" for line in sys.stdin.readlines(); ' > "$public_file"
+    echo "New password stored at $secret_file, hash in $public_file"
 }  
 
 function generate_key_file() {
-    openssl genpkey -algorithm ed25519 -outform PEM | tee "$KEYFILE" | openssl pkey -pubout -out "$PUBLIC_KEY_FILE" 
-    echo "New SSH key stored at $KEYFILE, pubkey in $PUBLIC_KEY_FILE"
+    local secret_file="$1"
+    local public_file="$2.new"
+    openssl genpkey -algorithm ed25519 -outform PEM | tee "$secret_file" | openssl pkey -pubout -out "$public_file" 
+    echo "New SSH key stored at $secret_file, pubkey in $public_file"
 } 
 
 function run_hooks() {
@@ -52,12 +60,20 @@ function run_hooks() {
     fi
 }
 
+function rebuild_combined() {
+    outfile="$1"
+    cat "$outfile.old" "$outfile.new" > "$outfile"
+}
+
 prepare_directories 2>&1 | with_logger 
+
 move_old_file "$PASSWDHASHFILE" 2>&1 | with_logger 
-generate_passwdfile 2>&1 | with_logger
+generate_passwdfile "$PASSWDFILE" "$PASSWDHASHFILE" 2>&1 | with_logger
+rebuild_combined "$PASSWDHASHFILE" 2>&1 | with_logger
 run_hooks "$PASSWD_HOOKS_DIR" 2>&1 | with_logger
 
 move_old_file "$PUBLIC_KEY_FILE" 2>&1 | with_logger
-generate_key_file 2>&1 | with_logger 
+generate_key_file "$KEYFILE" "$PUBLIC_KEY_FILE" 2>&1 | with_logger 
+rebuild_combined "$PUBLIC_KEY_FILE" 2>&1 | with_logger
 run_hooks "$KEY_HOOKS_DIR" 2>&1 | with_logger
 
