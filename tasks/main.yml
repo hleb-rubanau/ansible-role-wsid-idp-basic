@@ -32,7 +32,7 @@
   template:
     dest: /etc/systemd/system/wsid.service
     src: wsid.service
-  registed: wsid_systemd_conf
+  register: wsid_systemd_conf
 - name:
   service:
     name: wsid
