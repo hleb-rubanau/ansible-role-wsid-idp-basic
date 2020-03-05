@@ -9,5 +9,5 @@
     state: directory
 - cron:
     name: "Rotate WSID for {{wsid_identity}}"
-    command: "{{ wsid_script_rotate }} '{{wsid_identity}}'"
+    job: "{{ wsid_script_rotate }} '{{wsid_identity}}'"
     minute: "*/{{ wsid_rotation_minutes }}"
