@@ -17,6 +17,7 @@
     - "{{ wsid_hooks_passwd_dir }}"
     - "{{ wsid_hooks_key_dir }}"
     - "{{ wsid_scripts_dir }}"
+    - "{{ wsid_includes_dir }}"
 - set_fact:
     wsid_script_setup: "{{ wsid_scripts_dir }}/setup.sh"
     wsid_script_teardown: "{{ wsid_scripts_dir }}/teardown.sh"
