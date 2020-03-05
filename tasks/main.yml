@@ -49,7 +49,7 @@
     loop_var: wsid_identity
 - cron:
     name: "WSID expose host key"
-    command: "{{ wsid_script_expose_hostkey }}"
+    job: "{{ wsid_script_expose_hostkey }}"
     minute: "*/{{ wsid_rotation_minutes }}"
 - name: nginx include snippet
   template:
