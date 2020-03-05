@@ -26,7 +26,7 @@
   template:
     dest: "{{ wsid_scripts_dir }}/{{ item }}"
     src: "{{ item }}"
-    mode: 0644
+    mode: 0744
   loop: [ "setup.sh", "teardown.sh", "rotate.sh", "expose_hostkey.sh" ]     
 - name: systemd service unit
   template:
