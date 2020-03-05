@@ -24,7 +24,7 @@
     wsid_script_expose_hostkey: "{{ wsid_scripts_dir }}/expose_hostkey.sh"
 - name: systemd scripts
   template:
-    dest: "{{ wsid_system_dir }}/{{ item }}"
+    dest: "{{ wsid_scripts_dir }}/{{ item }}"
     src: "{{ item }}"
     mode: 0644
   loop: [ "setup.sh", "teardown.sh", "rotate.sh", "expose_hostkey.sh" ]     
