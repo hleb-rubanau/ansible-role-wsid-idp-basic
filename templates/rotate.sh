@@ -53,10 +53,11 @@ function run_hooks() {
     else
         echo "Checking for hooks in $hooksdir"
         cd "$hooksdir"
-        for hook in $( find . -type -f ); do
+        for hook in $( find . -type f ); do
             echo "Running hook $hook"
             $hook
         done
+        cd -
     fi
 }
 
