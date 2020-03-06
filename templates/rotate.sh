@@ -28,14 +28,14 @@ function move_old_file() {
     if [ -e "$oldfile.new" ]; then
         mv -vf "$oldfile.new" "${oldfile}.old"
     else
-        echo -n '' > "${ oldfile }.old"
+        echo -n '' > "${oldfile}.old"
     fi
 }
 
 function generate_passwdfile() {
     local secret_file=$1
     local public_file="$2.new"
-    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( nacl.pwhash.str(line.strip())+"\n" for line in sys.stdin.readlines(); ' > "$public_file"
+    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( nacl.pwhash.str(line.strip()) )+"\n" for line in sys.stdin.readlines(); ' > "$public_file"
     echo "New password stored at $secret_file, hash in $public_file"
 }  
 
@@ -48,7 +48,7 @@ function generate_key_file() {
 
 function run_hooks() {
     hooksdir="$1"
-    if ![ -e "$hooksdir" ]; then
+    if [ ! -e "$hooksdir" ]; then
         echo "Hooks directory $hooksdir does not exist, running no hooks"
     else
         echo "Checking for hooks in $hooksdir"
