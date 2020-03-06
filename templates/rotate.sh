@@ -26,16 +26,16 @@ function with_logger() {
 function move_old_file() {
     oldfile="$1"
     if [ -e "$oldfile.new" ]; then
-        mv -vf "$oldfile.new" "${oldfile}.old"
+        mv -vf "$oldfile.new" "${oldfile}.old" ;
     else
-        echo -n '' > "${oldfile}.old"
+        echo -n '' > "${oldfile}.old" ;
     fi
 }
 
 function generate_passwdfile() {
     local secret_file=$1
     local public_file="$2.new"
-    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( "\n".join( [ nacl.pwhash.str(line.strip()) for line in sys.stdin.readlines() ] )+"\n" ); ' > "$public_file"
+    pwgen | tee "$secret_file" | python3 -c 'import nacl.pwhash; import sys; print( "\n".join( [ nacl.pwhash.str(line.strip()) for line in sys.stdin.readlines() ] )+"\n" ); ' > "$public_file"
     echo "New password stored at $secret_file, hash in $public_file"
 }  
 
