@@ -47,7 +47,7 @@
     loop_var: wsid_identity
 - cron:
     name: "WSID secrets rotation and publishing"
-    job: "{{ wsid_script_rotate }} {{ wsid_identities | join(" ") }}"
+    job: "{{ wsid_script_rotate }} {{ wsid_identities | join(' ') }}"
     minute: "*/{{ wsid_rotation_minutes }}"
 - name: nginx include snippet
   template:
