@@ -91,7 +91,17 @@ function run_identity_hooks() {
     run_hooks "$identity_key_hooks_dir"
 }   
 
+function hostkey_expose() {
+    local src=/etc/ssh/ssh_host_ed25519_key.pub
+    local dest="$WSID_PUBLIC_DIR/ssh_host_ed25519_key.pub"
+    echo "Exposing $src -> $dest"
+    cut -f1,2 -d' ' < "$src" > "$dest"
+} 
+
 wsid_identities=$*
+
+hostkey_expose | with_logger 
+
 for wsid_identity in $wsid_identities ; do
     do_rotation "$wsid_identity" 2>&1 | with_logger 
 done
