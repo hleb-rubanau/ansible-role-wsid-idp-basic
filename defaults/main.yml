@@ -6,3 +6,4 @@ wsid_user: wsid
 wsid_rotation_minutes: 10
 wsid_identities: [ '_' ]
 wsid_disabled_identities: []
+wsid_delay_before_update_seconds: 30

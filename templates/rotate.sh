@@ -1,26 +1,15 @@
 #!/bin/bash
 
-ID="${1:-_}"
-USER_PRIVATE_DIR="{{ wsid_var_run }}/private/$ID"
-USER_PUBLIC_DIR="{{ wsid_var_run }}/public/$ID"
+WSID_PRIVATE_DIR="{{ wsid_var_run }}/private"
+WSID_PUBLIC_DIR="{{ wsid_var_run }}/public"
+WSID_PASSWD_HOOKS_DIR="{{ wsid_hooks_passwd_dir }}"
+WSID_KEY_HOOKS_DIR="{{ wsid_hooks_key_dir }}"
+WSID_DELAY_BEFORE_UPDATE_SECONDS={{wsid_delay_before_update_seconds}}
 
-ROTATION_TIMESTAMP=$( date +%s )
 
-PASSWDFILE="${USER_PRIVATE_DIR}/passwd"
-PASSWDHASHFILE="${ USER_PUBLIC_DIR }/passwdhash"
-PASSWD_HOOKS_DIR="{{ wsid_hooks_passwd_dir }}/$ID"
-
-KEYFILE="${USER_PRIVATE_DIR}/id_ed25519"
-PUBLIC_KEY_FILE="${USER_PUBLIC_DIR}/id_ed25519.pub"
-KEY_HOOKS_DIR="{{ wsid_hooks_key_dir }}/$ID"
-
-function prepare_directories() {
-    mkdir -pv "$USER_PRIVATE_DIR"
-    mkdir -pv "$USER_PUBLIC_DIR"
-}
 
 function with_logger() {
-    logger -e -s -t wsid
+    logger -e -s -t wsid-rotate
 }   
 
 function move_old_file() {
@@ -33,18 +22,24 @@ function move_old_file() {
 }
 
 function generate_passwdfile() {
-    local secret_file=$1
-    local public_file="$2.new"
+    local secret_file="$1"
+    local public_file="$2"
     pwgen | tee "$secret_file" | python3 -c 'import nacl.pwhash; import sys; print( "\n".join( [ nacl.pwhash.str(line.strip()) for line in sys.stdin.readlines() ] )+"\n" ); ' > "$public_file"
     echo "New password stored at $secret_file, hash in $public_file"
 }  
 
 function generate_key_file() {
     local secret_file="$1"
-    local public_file="$2.new"
+    local public_file="$2"
     openssl genpkey -algorithm ed25519 -outform PEM | tee "$secret_file" | openssl pkey -pubout -out "$public_file" 
     echo "New SSH key stored at $secret_file, pubkey in $public_file"
 } 
+
+function rebuild_combined() {
+    outfile="$1"
+    # newest always comes first, it may be useful
+    cat "$outfile.new" "$outfile.old" > "$outfile"
+}
 
 function run_hooks() {
     hooksdir="$1"
@@ -61,20 +56,49 @@ function run_hooks() {
     fi
 }
 
-function rebuild_combined() {
-    outfile="$1"
-    cat "$outfile.old" "$outfile.new" > "$outfile"
+
+
+function do_rotation() {
+    local wsid_id="$1"
+    echo "Secrets rotation for identity '$wsid_id'"
+    local identity_private_dir="$WSID_PRIVATE_DIR/$wsid_id"
+    local identity_public_dir="$WSID_PUBLIC_DIR/$wsid_id"
+
+    mkdir -pv "$identity_private_dir"
+    mkdir -pv "$identity_public_dir"
+
+    local identity_passwd_file="$identity_private_dir/passwd"
+    local identity_pwhash_file="$identity_public_dir/passwdhash"
+   
+    move_old_file "$identity_pwhash_file"
+    generate_passwdfile  "$identity_passwd_file" "$identity_pwhash_file.new"
+    rebuild_combined "$identity_pwhash_file"
+
+    local identity_privkey_file="$identity_private_dir/id_ed25519"
+    local identity_pubkey_file="$identity_public_dir/id_ed25519.pub"
+
+    move_old_file "$identity_pubkey_file"
+    generate_key_file "$identity_privkey_file" "$identity_pubkey_file.new"
+    rebuild_combined "$identity_pubkey_file"
 }
 
-prepare_directories 2>&1 | with_logger 
+function run_identity_hooks() {
+    local wsid_id="$1"
+    echo "Post-rotate hooks for identity '$wsid_id'"
+    local identity_passwd_hooks_dir="$WSID_PASSWD_HOOKS_DIR/$wsid_id"
+    local identity_key_hooks_dir="$WSID_KEY_HOOKS_DIR/$wsid_id"
+    run_hooks "$identity_passwd_hooks_dir"
+    run_hooks "$identity_key_hooks_dir"
+}   
 
-move_old_file "$PASSWDHASHFILE" 2>&1 | with_logger 
-generate_passwdfile "$PASSWDFILE" "$PASSWDHASHFILE" 2>&1 | with_logger
-rebuild_combined "$PASSWDHASHFILE" 2>&1 | with_logger
-run_hooks "$PASSWD_HOOKS_DIR" 2>&1 | with_logger
+wsid_identities=$*
+for wsid_identity in $wsid_identities ; do
+    do_rotation "$wsid_identity" 2>&1 | with_logger 
+done
 
-move_old_file "$PUBLIC_KEY_FILE" 2>&1 | with_logger
-generate_key_file "$KEYFILE" "$PUBLIC_KEY_FILE" 2>&1 | with_logger 
-rebuild_combined "$PUBLIC_KEY_FILE" 2>&1 | with_logger
-run_hooks "$KEY_HOOKS_DIR" 2>&1 | with_logger
+echo "Sleeping {{ wsid_delay_before_update_seconds }} seconds before pushing secrets to consumers" | with_logger
+sleep $WSID_DELAY_BEFORE_UPDATE_SECONDS
 
+for wsid_identity in $wsid_identities ; do
+    run_identity_hooks "$wsid_identity" 2>&1 | with_logger
+done
