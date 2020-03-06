@@ -35,7 +35,7 @@ function move_old_file() {
 function generate_passwdfile() {
     local secret_file=$1
     local public_file="$2.new"
-    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( nacl.pwhash.str(line.strip()) )+"\n" for line in sys.stdin.readlines(); ' > "$public_file"
+    pwgen | tee "$secret_file" | python -c 'import nacl.pwhash; import sys; print( "\n".join( [ nacl.pwhash.str(line.strip()) for line in sys.stdin.readlines() ] )+"\n" ); ' > "$public_file"
     echo "New password stored at $secret_file, hash in $public_file"
 }  
 
