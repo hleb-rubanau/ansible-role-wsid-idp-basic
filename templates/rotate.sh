@@ -33,7 +33,7 @@ function generate_key_file() {
     local public_file="$2"
     local wsid_id="$3"
     #openssl genpkey -algorithm ed25519 -outform PEM | tee "$secret_file" | openssl pkey -pubout -out "$public_file" 
-    ssh-keygen -t ed25519 -N '' -C "$wsid_id" -f "$secret_file" && mv -v "$secret_file.pub" "$public_file"
+    echo -e 'y\n' | ssh-keygen -t ed25519 -N '' -C "$wsid_id" -f "$secret_file" && mv -v "$secret_file.pub" "$public_file"
     echo "New SSH key stored at $secret_file, pubkey in $public_file"
 } 
 
