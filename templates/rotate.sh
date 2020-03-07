@@ -31,7 +31,9 @@ function generate_passwdfile() {
 function generate_key_file() {
     local secret_file="$1"
     local public_file="$2"
-    openssl genpkey -algorithm ed25519 -outform PEM | tee "$secret_file" | openssl pkey -pubout -out "$public_file" 
+    local wsid_id="$3"
+    #openssl genpkey -algorithm ed25519 -outform PEM | tee "$secret_file" | openssl pkey -pubout -out "$public_file" 
+    ssh-keygen -t ed25519 -N'' -C "$wsid_id" -f "$secret_file" && mv -v "$secret_file.pub" "$public_file"
     echo "New SSH key stored at $secret_file, pubkey in $public_file"
 } 
 
@@ -78,7 +80,7 @@ function do_rotation() {
     local identity_pubkey_file="$identity_public_dir/id_ed25519.pub"
 
     move_old_file "$identity_pubkey_file"
-    generate_key_file "$identity_privkey_file" "$identity_pubkey_file.new"
+    generate_key_file "$identity_privkey_file" "$identity_pubkey_file.new" "$wsid_id"
     rebuild_combined "$identity_pubkey_file"
 }
 
