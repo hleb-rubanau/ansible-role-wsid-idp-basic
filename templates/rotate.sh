@@ -38,7 +38,7 @@ function generate_key_file() {
 function rebuild_combined() {
     outfile="$1"
     # newest always comes first, it may be useful
-    cat "$outfile.new" "$outfile.old" > "$outfile"
+    cat "$outfile.new" "$outfile.old" | egrep -v '^$' > "$outfile"
 }
 
 function run_hooks() {
