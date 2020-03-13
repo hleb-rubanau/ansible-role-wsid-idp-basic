@@ -57,6 +57,10 @@
   template:
     dest: "{{ wsid_includes_dir }}/nginx-expose.conf"
     src: nginx-expose.conf
+- name: wait for WSID public directory to be created
+  wait_for:
+    path: "{{ wsid_var_run }}/public"
+    timeout: 200
 - name: wait for WSID identities to be generated
   wait_for:
     path: "{{ wsid_var_run }}/public/{{item}}/passwdhash"
