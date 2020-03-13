@@ -57,3 +57,8 @@
   template:
     dest: "{{ wsid_includes_dir }}/nginx-expose.conf"
     src: nginx-expose.conf
+- name: wait for WSID identities to be generated
+  wait_for:
+    path: "{{ wsid_var_run }}/public/{{item}}/passwdhash"
+    timeout: 200
+  loop: "{{ wsid_identities  }}"
